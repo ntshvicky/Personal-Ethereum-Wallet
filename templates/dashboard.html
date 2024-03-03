@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.3.0/dist/web3.min.js"></script>
+
+
+</head>
+<body>
+    <h1>Wallet Dashboard</h1>
+    <p>Account Address:
+        <select id="w_address">
+            {% for address in data.addresses %}
+            <option value="{{ address }}">{{ address }}</option>
+            {% endfor %}
+        </select>
+    </p>
+    <p>Selected Chain:
+        <select id="w_chain">
+            <option value="sepolia">Sepolia</option>
+            <option value="goerli">Goerli</option>
+        </select>
+    </p>
+
+    <p>Balance: {{ data.balance }} ETH (${{data.usd}})</p>
+
+    <div id="message" style="font-weight: bold; font-size: 22px; color: red;"></div>
+    <br><br>
+
+    <table>
+        <tr>
+            <td> <button id="btnSendCrypto">Send Crypto</button></td>
+            <td>
+                <input type="text" id="inputReceiverAddress" placeholder="Send to Address" autocomplete="off" style="width:250px"/>
+                <input type="text" id="inputSendAmount" placeholder="Send Amount in ETH" autocomplete="off" style="width:120px"/>
+            </td>
+        </tr>
+        <tr>
+            <td> <button>Receive Crypto</button></td>
+            <td>{{ data.selected_address }}</td>
+        </tr>
+        <tr>
+            <td colspan="2"> <button id="btnAddAccount">Create Another Account</button></td>
+        </tr>
+        <tr>
+            <td> <a href="https://www.alchemy.com/faucets/polygon-mumbai" target="_blank">Open faucet</a></td>
+            <td> <a href="/logout">Logout</a></td>
+        </tr>
+    </table>
+    
+    
+
+
+    <script>
+
+
+        // ajax request to create a new account
+
+        var btnAddAccount = document.getElementById("btnAddAccount");
+        btnAddAccount.addEventListener("click", function() {
+            document.getElementById("btnAddAccount").disabled = true;
+            document.getElementById("message").innerHTML = "A new account is being created...";
+
+            $.ajax({
+                url: "/api/add_new_account",
+                type: "POST",
+                contentType: "application/json",
+                dataType: "json",
+                data: JSON.stringify({
+                    user_id: "{{data.user_id}}"
+                }),
+                success: function(data) {
+                    console.log(data);
+                    document.getElementById("btnAddAccount").disabled = false;
+                    document.getElementById("message").innerHTML = data.message;
+                    location.reload();
+                }
+            });
+
+        });
+
+
+        // ajax request to send crypto to another address
+
+        var btnAddAccount = document.getElementById("btnSendCrypto");
+        btnAddAccount.addEventListener("click", function() {
+            document.getElementById("btnSendCrypto").disabled = true;
+            
+            let senderAddress = document.getElementById("w_address").value;
+            let selectedChain = document.getElementById("w_chain").value;
+            let inputReceiverAddress = document.getElementById("inputReceiverAddress");
+            let inputSendAmount = document.getElementById("inputSendAmount");
+            let sendToAddress = inputReceiverAddress.value;
+            let sendValue = inputSendAmount.value;
+
+            inputReceiverAddress.disabled = true;
+            inputSendAmount.disabled = true;
+
+            document.getElementById("message").innerHTML = "A new account is being created...";
+
+            $.ajax({
+                url: "/api/send_crypto",
+                type: "POST",
+                contentType: "application/json",
+                dataType: "json",
+                data: JSON.stringify({
+                    user_id: "{{data.user_id}}",
+                    sAddress: senderAddress,
+                    rAddress: sendToAddress,
+                    amount_in_ether: sendValue,
+                    chain: selectedChain
+                }),
+                success: function(data) {
+                    console.log(data);
+                    document.getElementById("btnSendCrypto").disabled = false;
+                    inputReceiverAddress.disabled = false;
+                    inputSendAmount.disabled = false;
+                    inputReceiverAddress.value = "";
+                    inputSendAmount.value = "";
+                    sendToAddress = 0.00;
+                    sendValue = 0.00;
+                    document.getElementById("message").innerHTML = data.message;
+                    location.reload();
+                }
+            });
+
+        });
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+
+            if (typeof Web3 !== 'undefined') {
+                const web3 = new Web3('wss://sepolia.infura.io/ws/v3/b0e73942cc414a07895c2fddafe7b2f1');
+
+                console.log("Web3.js version:", Web3.version);
+
+                console.log(web3.eth)
+
+                web3.eth.subscribe('pendingTransactions', (err, res) => {
+                    if (err) console.error(err);
+                })
+                .on("data", function(transactionHash){
+                    web3.eth.getTransaction(transactionHash)
+                    .then(function(transaction){
+                        // Fetch the target account inside the callback to get the current value
+                        const targetAccount = document.getElementById("w_address").value.toLowerCase();
+                        console.log("targetAccount", targetAccount)
+
+                        console.log(transaction.to, transaction.from)
+                        
+                        if(transaction.to && transaction.to.toLowerCase() === targetAccount){
+                            console.log("ETH received, refreshing page");
+                            window.location.reload();
+                        }
+                    })
+                    .catch(console.error);
+                });
+            } else {
+                console.error("Web3.js not loaded");
+            }
+
+        });
+
+
+    </script>
+
+</body>
+</html>

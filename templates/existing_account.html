@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Import Existing Wallet</title>
+</head>
+<body>
+    <h1>Import Existing Wallet</h1>
+    <form action="/verify_existing_mnemonic" method="post">
+
+        <h2>Enter Mnemonic & Enter New Password</h2>
+        <br/>
+        <label>Enter Manemonic of given place number</label>
+        <br/>
+        {% for i in random_numbers%}
+        <input type="text" id="mnemonic{{i}}" name="mnemonic{{i}}" placeholder="{{i}}">
+        {% endfor %}
+
+        <br/>
+        <br/>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <input type="submit" value="Verify & Update Password">
+    </form>
+    <br>
+    <br>
+    <a href="/new_account">Create a New Account</a>
+    <br>
+    <a href="/">Go to Home</a>
+</body>
+</html>

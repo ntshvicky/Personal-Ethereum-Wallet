@@ -1,0 +1,10 @@
+flask
+flask_cors
+eth-account
+pybip39
+bip39
+web3
+python-dotenv
+pymongo
+bcrypt
+pycryptodome
