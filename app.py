@@ -367,6 +367,11 @@ def send_crypto():
     # Send the transaction
     tx_hash = web3.eth.send_raw_transaction(signed_tx.rawTransaction)
 
+    tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+
+    if tx_receipt['status'] != 1:
+            return False, "Transaction Failed"
+
     # Get the transaction hash
     print(f"Transaction hash: {web3.to_hex(tx_hash)}")
 
